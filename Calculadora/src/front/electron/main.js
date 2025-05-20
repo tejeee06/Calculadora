@@ -3,21 +3,20 @@ const path = require('path');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 800,
+    width: 400, 
     height: 600,
+    resizable: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
     },
   });
-
   win.loadURL('http://localhost:3000');
+  win.setMenu(null);
 }
 
 app.whenReady().then(() => {
   createWindow();
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
