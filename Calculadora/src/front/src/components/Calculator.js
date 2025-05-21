@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import Screen from './Screen';
 import ButtonGrid from './ButtonGrid';
 import './Calculator.css';
 
 const Calculator = () => {
   const [display, setDisplay] = useState('0');
-  const [ans, setAns] = useState(null); 
+  const [ans, setAns] = useState(null);
   const [operand1, setOperand1] = useState(null);
   const [operation, setOperation] = useState(null);
 
@@ -36,20 +37,23 @@ const Calculator = () => {
     } else if (label === '=') {
       if (operand1 !== null && operation) {
         const operand2 = parseFloat(display);
-        let result;
-        switch (operation) {
-          case '+': result = operand1 + operand2; break;
-          case '-': result = operand1 - operand2; break;
-          case 'x': result = operand1 * operand2; break;
-          case '÷': result = operand1 / operand2; break;
-          case '√': result = Math.sqrt(operand1); break;
-          case '^': result = Math.pow(operand1, operand2); break;
-          default: result = 0;
-        }
-        setDisplay(result.toString());
-        setAns(result);
-        setOperand1(null);
-        setOperation(null);
+        axios
+          .post('http://localhost:8080/api/calculate', {
+            operand1,
+            operand2: operation === '√' ? 0 : operand2,
+            operation,
+          })
+          .then((response) => {
+            const result = response.data;
+            setDisplay(result.toString());
+            setAns(result);
+            setOperand1(null);
+            setOperation(null);
+          })
+          .catch((error) => {
+            setDisplay('Error');
+            console.error(error);
+          });
       }
     }
   };

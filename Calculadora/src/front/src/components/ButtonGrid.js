@@ -11,7 +11,7 @@ const ButtonGrid = ({ onButtonClick }) => {
     { label: '7', className: '' },
     { label: '8', className: '' },
     { label: '9', className: '' },
-    { label: '×', className: 'operator' },
+    { label: 'x', className: 'operator' },
     { label: '4', className: '' },
     { label: '5', className: '' },
     { label: '6', className: '' },
