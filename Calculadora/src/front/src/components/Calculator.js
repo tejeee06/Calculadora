@@ -6,110 +6,137 @@ import './Calculator.css';
 
 const Calculator = () => {
   const [display, setDisplay] = useState('0');
-  const [expression, setExpression] = useState('');
+  const [expression, setExpression] = useState([]);
   const [ans, setAns] = useState(null);
-  const [operand1, setOperand1] = useState(null);
-  const [operand2, setOperand2] = useState(null);
-  const [operation, setOperation] = useState(null);
   const [currentInput, setCurrentInput] = useState('0');
-  const [isSecondOperand, setIsSecondOperand] = useState(false);
+  const [pendingOperation, setPendingOperation] = useState(null);
+  const [result, setResult] = useState(null);
 
-  const handleButtonClick = (label) => {
+  const evaluateExpression = async (currentExpression) => {
+    let currentResult = result || 0;
+    let currentOperand = '';
+    let currentOp = null;
+
+   
+    const tokens = currentExpression.join('').split(' ').filter(t => t !== '');
+    
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (/^[0-9.]+$/.test(token)) {
+        currentOperand = token;
+      } else if (['+', '-', 'x', '÷', '^'].includes(token)) {
+        if (currentOperand !== '') {
+          if (currentResult === null) {
+            currentResult = parseFloat(currentOperand);
+          } else {
+            const response = await axios.post('http://localhost:8080/api/calculate', {
+              operand1: currentResult,
+              operand2: parseFloat(currentOperand),
+              operation: currentOp || '+',
+            });
+            currentResult = response.data;
+          }
+          currentOperand = '';
+          currentOp = token;
+        }
+      } else if (token === '√') {
+        if (currentOperand !== '') {
+          const response = await axios.post('http://localhost:8080/api/calculate', {
+            operand1: parseFloat(currentOperand),
+            operand2: 0,
+            operation: '√',
+          });
+          currentResult = response.data;
+          currentOperand = '';
+        }
+      }
+    }
+
+    
+    if (currentOperand !== '' && currentOp) {
+      const response = await axios.post('http://localhost:8080/api/calculate', {
+        operand1: currentResult,
+        operand2: parseFloat(currentOperand),
+        operation: currentOp,
+      });
+      currentResult = response.data;
+    }
+
+    return currentResult;
+  };
+
+  const handleButtonClick = async (label) => {
     if (/[0-9]/.test(label)) {
+      // Números
       const newInput = currentInput === '0' ? label : currentInput + label;
       setCurrentInput(newInput);
-      if (operation && operand1 !== null) {
-        setIsSecondOperand(true);
-        setOperand2(parseFloat(newInput));
-        setDisplay(`${operand1} ${operation} ${newInput}`);
-      } else {
-        setDisplay(newInput);
-      }
+      setExpression([...expression, label]);
+      setDisplay([...expression, label].join(' '));
     } else if (label === '.') {
+     
       if (!currentInput.includes('.')) {
         const newInput = currentInput + '.';
         setCurrentInput(newInput);
-        if (operation && operand1 !== null) {
-          setIsSecondOperand(true);
-          setOperand2(parseFloat(newInput));
-          setDisplay(`${operand1} ${operation} ${newInput}`);
-        } else {
-          setDisplay(newInput);
-        }
+        setExpression([...expression, '.']);
+        setDisplay([...expression, '.'].join(' '));
       }
     } else if (label === 'C') {
-      setDisplay('0');
-      setExpression('');
-      setCurrentInput('0');
-      setOperand1(null);
-      setOperand2(null);
-      setOperation(null);
-      setIsSecondOperand(false);
       
+      setDisplay('0');
+      setExpression([]);
+      setCurrentInput('0');
+      setPendingOperation(null);
+      setResult(null);
+      setAns(null);
     } else if (label === '⌫') {
-      const newInput = currentInput.length === 1 || currentInput === '0' ? '0' : currentInput.slice(0, -1);
-      setCurrentInput(newInput);
-      if (operation && operand1 !== null) {
-        if (newInput === '0') {
-          setIsSecondOperand(false);
-          setOperand2(null);
-          setDisplay(`${operand1} ${operation}`);
-        } else {
-          setOperand2(parseFloat(newInput));
-          setDisplay(`${operand1} ${operation} ${newInput}`);
-        }
+      
+      if (currentInput.length === 1 || currentInput === '0') {
+        setCurrentInput('0');
+        setExpression([]);
+        setDisplay('0');
       } else {
-        setDisplay(newInput);
+        const newInput = currentInput.slice(0, -1);
+        setCurrentInput(newInput);
+        const newExpression = expression.slice(0, -1);
+        setExpression(newExpression);
+        setDisplay(newExpression.join(' ') || '0');
       }
     } else if (label === 'ANS') {
+      
       if (ans !== null) {
-       
         setCurrentInput(ans.toString());
-        if (operation && operand1 !== null) {
-          
-          setOperand2(ans);
-          setDisplay(`${operand1} ${operation} ${ans}`);
-          setIsSecondOperand(true);
-        } else {
-          
-          setOperand1(ans);
-          setDisplay(ans.toString());
-        }
-        setExpression(ans.toString());
+        setExpression([...expression, ans.toString()]);
+        setDisplay([...expression, ans.toString()].join(' '));
       }
-    } else if (['+', '-', 'x', '÷', '√', '^'].includes(label)) {
-      setOperand1(parseFloat(currentInput));
-      setOperation(label);
-      setCurrentInput('0');
-      setExpression(`${currentInput} ${label}`);
-      setDisplay(`${currentInput} ${label}`);
-      setIsSecondOperand(false);
+    } else if (['+', '-', 'x', '÷', '^', '√'].includes(label)) {
+      
+      if (label === '√') {
+        setExpression([...expression, label, ' ']);
+        setDisplay([...expression, label, ' '].join(' '));
+        setCurrentInput('0');
+      } else {
+        setExpression([...expression, ' ', label, ' ']);
+        setDisplay([...expression, ' ', label, ' '].join(' '));
+        setCurrentInput('0');
+        setPendingOperation(label);
+      }
     } else if (label === '=') {
-      if (operand1 !== null && operation) {
-        const finalOperand2 = operand2 !== null ? operand2 : parseFloat(currentInput);
-        axios
-          .post('http://localhost:8080/api/calculate', {
-            operand1,
-            operand2: operation === '√' ? 0 : finalOperand2,
-            operation,
-          })
-          .then((response) => {
-            const result = response.data;
-            setDisplay(result.toString());
-            setExpression(`${operand1} ${operation} ${finalOperand2} = ${result}`);
-            setAns(result); 
-            setCurrentInput(result.toString());
-            setOperand1(null);
-            setOperand2(null);
-            setOperation(null);
-            setIsSecondOperand(false);
-          })
-          .catch((error) => {
-            setDisplay('Error');
-            setExpression(`${operand1} ${operation} ${finalOperand2} = Error`);
-            setAns(null); 
-            console.error(error);
-          });
+      
+      try {
+        const finalResult = await evaluateExpression([...expression, ' ', currentInput]);
+        setDisplay(finalResult.toString());
+        setExpression([finalResult.toString()]);
+        setAns(finalResult);
+        setResult(finalResult);
+        setCurrentInput(finalResult.toString());
+        setPendingOperation(null);
+      } catch (error) {
+        setDisplay('Error');
+        setExpression([]);
+        setCurrentInput('0');
+        setPendingOperation(null);
+        setResult(null);
+        console.error(error);
       }
     }
   };
