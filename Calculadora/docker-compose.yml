@@ -1,28 +1,33 @@
 version: '3.8'
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.back
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - ./src/back/calculator-backend:/app/back
+    networks:
+      - calc-network
+
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.front
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./src/front:/app/front
     environment:
       - NODE_ENV=development
-    container_name: calculator-frontend
     depends_on:
       - backend
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./backend:/app
-      - ./backend/bin:/app/bin
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-    container_name: calculator-backend
+    networks:
+      - calc-network
+
+networks:
+  calc-network:
+    driver: bridge
