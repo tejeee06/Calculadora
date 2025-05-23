@@ -45,7 +45,7 @@ const Calculator = () => {
       setOperand2(null);
       setOperation(null);
       setIsSecondOperand(false);
-      // No reseteamos ans, para que siga disponible
+      
     } else if (label === '⌫') {
       const newInput = currentInput.length === 1 || currentInput === '0' ? '0' : currentInput.slice(0, -1);
       setCurrentInput(newInput);
@@ -63,21 +63,21 @@ const Calculator = () => {
       }
     } else if (label === 'ANS') {
       if (ans !== null) {
-        // Mostrar siempre el resultado anterior
+       
         setCurrentInput(ans.toString());
         if (operation && operand1 !== null) {
-          // Si ya hay un operador, usamos ANS como operand2
+          
           setOperand2(ans);
           setDisplay(`${operand1} ${operation} ${ans}`);
           setIsSecondOperand(true);
         } else {
-          // Si no hay operador, ANS se convierte en operand1
+          
           setOperand1(ans);
           setDisplay(ans.toString());
         }
         setExpression(ans.toString());
       }
-    } else if (['+', '-', '×', '÷', '√', '^'].includes(label)) {
+    } else if (['+', '-', 'x', '÷', '√', '^'].includes(label)) {
       setOperand1(parseFloat(currentInput));
       setOperation(label);
       setCurrentInput('0');
@@ -97,7 +97,7 @@ const Calculator = () => {
             const result = response.data;
             setDisplay(result.toString());
             setExpression(`${operand1} ${operation} ${finalOperand2} = ${result}`);
-            setAns(result); // Actualizamos ans con el resultado
+            setAns(result); 
             setCurrentInput(result.toString());
             setOperand1(null);
             setOperand2(null);
@@ -107,7 +107,7 @@ const Calculator = () => {
           .catch((error) => {
             setDisplay('Error');
             setExpression(`${operand1} ${operation} ${finalOperand2} = Error`);
-            setAns(null); // En caso de error, reseteamos ans
+            setAns(null); 
             console.error(error);
           });
       }

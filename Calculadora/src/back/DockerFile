@@ -1,0 +1,10 @@
+FROM openjdk:17-jdk-slim AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN ./mvnw clean package -DskipTests && mv target/*.jar bin/calculator-backend.jar
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/bin/calculator-backend.jar ./bin/calculator-backend.jar
+EXPOSE 8080
+CMD ["java", "-jar", "bin/calculator-backend.jar"]
