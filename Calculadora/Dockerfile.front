@@ -1,25 +1,23 @@
-# Etapa de construcción
+
 FROM node:16 AS build
 WORKDIR /app/front
 COPY src/front/package*.json ./
-# Limpiar caché y forzar instalación limpia
 RUN npm cache clean --force
 RUN npm install --verbose
-# Verificar que react-scripts está instalado
+
 RUN ls node_modules/react-scripts/bin/react-scripts.js || (echo "ERROR: react-scripts not found in build stage" && exit 1)
 COPY src/front ./
 RUN npm run build
 
-# Etapa de ejecución
 FROM node:16
 WORKDIR /app/front
-# Reinstalar dependencias en la etapa de ejecución
+
 COPY src/front/package*.json ./
 RUN npm cache clean --force
 RUN npm install --verbose
-# Verificar que react-scripts está instalado
+
 RUN ls node_modules/react-scripts/bin/react-scripts.js || (echo "ERROR: react-scripts not found in run stage" && exit 1)
-# Copiar archivos fuente necesarios para react-scripts start
+
 COPY src/front/public ./public
 COPY src/front/src ./src
 COPY --from=build /app/front/build ./build
