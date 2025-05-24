@@ -1,12 +1,10 @@
-# Etapa de construcción
+
 FROM node:18 AS build
 WORKDIR /app/front
 COPY src/front/package*.json ./
 RUN npm install
 COPY src/front ./
 RUN npm run build
-
-# Etapa de desarrollo
 FROM node:18
 WORKDIR /app/front
 COPY --from=build /app/front/node_modules ./node_modules
