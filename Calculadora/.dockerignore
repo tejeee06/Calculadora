@@ -1,0 +1,9 @@
+node_modules
+src/front/node_modules
+src/back/calculator-backend/target
+bin
+lib
+.vscode
+.git
+.gitignore
+*.md
