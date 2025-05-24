@@ -1,10 +1,17 @@
-FROM node:18 AS build
+
+FROM node:18.20 AS build
 WORKDIR /app/front
 COPY src/front/package*.json ./
-RUN npm install
+
+RUN npm cache clean --force
+RUN npm install --verbose
 COPY src/front ./
 RUN npm run build
-FROM node:18
+
+RUN ls node_modules/react-scripts/bin/react-scripts.js || echo "react-scripts not found"
+
+
+FROM node:18.20
 WORKDIR /app/front
 COPY --from=build /app/front/node_modules ./node_modules
 COPY --from=build /app/front ./
