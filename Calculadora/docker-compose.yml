@@ -18,8 +18,6 @@ services:
       dockerfile: Dockerfile.front
     ports:
       - "3000:3000"
-    volumes:
-      - ./src/front:/app/front
     environment:
       - NODE_ENV=development
     depends_on:

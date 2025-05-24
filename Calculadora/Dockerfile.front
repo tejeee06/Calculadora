@@ -1,15 +1,19 @@
-
+#
 FROM node:16 AS build
 WORKDIR /app/front
 COPY src/front/package*.json ./
 RUN npm cache clean --force
 RUN npm install --verbose
-RUN ls node_modules/react-scripts/bin/react-scripts.js || (echo "ERROR: react-scripts not found" && exit 1)
+RUN ls node_modules/react-scripts/bin/react-scripts.js || (echo "ERROR: react-scripts not found in build stage" && exit 1)
 COPY src/front ./
 RUN npm run build
+
 FROM node:16
 WORKDIR /app/front
-COPY --from=build /app/front/node_modules ./node_modules
-COPY --from=build /app/front ./
+COPY src/front/package*.json ./
+RUN npm cache clean --force
+RUN npm install --verbose
+RUN ls node_modules/react-scripts/bin/react-scripts.js || (echo "ERROR: react-scripts not found in run stage" && exit 1)
+COPY --from=build /app/front/build ./build
 EXPOSE 3000
 CMD ["npm", "start"]
