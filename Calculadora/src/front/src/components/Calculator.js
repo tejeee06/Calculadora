@@ -17,53 +17,54 @@ const Calculator = () => {
     let currentOperand = '';
     let currentOp = null;
 
-   
     const tokens = currentExpression.join('').split(' ').filter(t => t !== '');
-    
+
     for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i];
-      if (/^[0-9.]+$/.test(token)) {
-        currentOperand = token;
-      } else if (['+', '-', 'x', '÷', '^'].includes(token)) {
-        if (currentOperand !== '') {
-          if (currentResult === null) {
-            currentResult = parseFloat(currentOperand);
-          } else {
-            const response = await axios.post('http://localhost:8080/api/calculate', {
-              operand1: currentResult,
-              operand2: parseFloat(currentOperand),
-              operation: currentOp || '+',
-            });
-            currentResult = response.data;
-          }
-          currentOperand = '';
-          currentOp = token;
-        }
-      } else if (token === '√') {
-        if (currentOperand !== '') {
+    const token = tokens[i];
+
+    if (/^[0-9.]+$/.test(token)) {
+      currentOperand = token;
+    } else if (['+', '-', 'x', '÷', '^'].includes(token)) {
+      if (currentOperand !== '') {
+        if (currentResult === null) {
+          currentResult = parseFloat(currentOperand);
+        } else {
           const response = await axios.post('http://localhost:8080/api/calculate', {
-            operand1: parseFloat(currentOperand),
-            operand2: 0,
-            operation: '√',
+            operand1: currentResult,
+            operand2: parseFloat(currentOperand),
+            operation: currentOp || '+',
           });
           currentResult = response.data;
-          currentOperand = '';
         }
+        currentOperand = '';
+        currentOp = token;
+      }
+    } else if (token === '√') {
+      if (i + 1 < tokens.length && /^[0-9.]+$/.test(tokens[i + 1])) {
+        const operand = parseFloat(tokens[i + 1]);
+        const response = await axios.post('http://localhost:8080/api/calculate', {
+          operand1: operand,
+          operand2: 0,
+          operation: '√',
+        });
+        currentResult = response.data;
+        i++; 
+        currentOperand = '';
       }
     }
+  }
 
-    
-    if (currentOperand !== '' && currentOp) {
-      const response = await axios.post('http://localhost:8080/api/calculate', {
-        operand1: currentResult,
-        operand2: parseFloat(currentOperand),
-        operation: currentOp,
-      });
-      currentResult = response.data;
-    }
+  if (currentOperand !== '' && currentOp) {
+    const response = await axios.post('http://localhost:8080/api/calculate', {
+      operand1: currentResult,
+      operand2: parseFloat(currentOperand),
+      operation: currentOp,
+    });
+    currentResult = response.data;
+  }
 
-    return currentResult;
-  };
+  return currentResult;
+};
 
   const handleButtonClick = async (label) => {
     if (/[0-9]/.test(label)) {
