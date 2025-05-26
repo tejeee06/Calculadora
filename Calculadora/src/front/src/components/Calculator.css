@@ -7,3 +7,38 @@
   margin: 20px auto;
   box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5);
 }
+
+.calculator::after {
+  content: '';
+  display: block;
+  border-bottom: 2px solid #1a1a1a;
+  margin: 20px;
+}
+
+.history-controls {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 20px;
+}
+
+.history-button {
+  background-color: #1e90ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.history-button:hover {
+  transform: scale(0.95);
+}
+
+.history-button:active {
+  transform: scale(0.9);
+}
+
+.history-button.clear {
+  background-color: #ff2d55;
+}

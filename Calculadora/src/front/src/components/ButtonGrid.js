@@ -5,8 +5,9 @@ import './ButtonGrid.css';
 const ButtonGrid = ({ onButtonClick }) => {
   const buttons = [
     { label: 'C', className: 'special' },
-    { label: '⌫', className: 'special' }, // Nuevo botón backspace
+    { label: '⌫', className: 'special' },
     { label: '√', className: 'special' },
+    { label: '^', className: 'special' }, // Botón de potencia
     { label: '÷', className: 'operator' },
     { label: '7', className: '' },
     { label: '8', className: '' },
@@ -24,6 +25,7 @@ const ButtonGrid = ({ onButtonClick }) => {
     { label: '0', className: '' },
     { label: '.', className: '' },
     { label: '=', className: 'equals' },
+    { label: '±', className: 'special' }, // Botón de cambio de signo
   ];
 
   return (

@@ -1,0 +1,48 @@
+.history {
+  background-color: #2e2e2e;
+  border: 2px solid #1a1a1a;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 20px;
+  color: #ffffff;
+}
+
+.history h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.5rem;
+}
+
+.history ul {
+  list-style: none;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.history li {
+  padding: 5px 0;
+  font-size: 1rem;
+}
+
+.history-button {
+  background-color: #1e90ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 5px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.history-button:hover {
+  transform: scale(0.95);
+}
+
+.history-button:active {
+  transform: scale(0.9);
+}
+
+.history-button.clear {
+  background-color: #ff2d55;
+}

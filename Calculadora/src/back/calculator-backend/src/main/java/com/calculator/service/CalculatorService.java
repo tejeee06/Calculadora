@@ -21,6 +21,7 @@ public class CalculatorService {
             case "√":
                 if (operand1 < 0) throw new IllegalArgumentException("Square root of negative number");
                 return Math.sqrt(operand1);
+            case "±": return -operand1; // Cambiar signo
             default: throw new IllegalArgumentException("Invalid operation: " + operation);
         }
     }
