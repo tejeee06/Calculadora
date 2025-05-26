@@ -15,6 +15,8 @@ const Calculator = () => {
   const [lastExpression, setLastExpression] = useState([]);
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [lastOperator, setLastOperator] = useState(null);
+  const [lastOperand, setLastOperand] = useState(null);
 
   const evaluateExpression = async (currentExpression) => {
     let currentResult = null;
@@ -96,6 +98,8 @@ const Calculator = () => {
       setPendingOperation(null);
       setResult(null);
       setAns(null);
+      setLastOperator(null);
+      setLastOperand(null);
     } else if (label === '⌫') {
       if (currentInput.length === 1 || currentInput === '0') {
         setCurrentInput('0');
@@ -119,19 +123,19 @@ const Calculator = () => {
         setDisplay(newExpression.join(' '));
         setCurrentInput('0');
         setPendingOperation(label);
+        setLastOperator(label);
+        setLastOperand(currentInput);
       }
     } else if (label === '√') {
-      if (currentInput !== '' && !isNaN(parseFloat(currentInput))) {
-        const newExpression = [...expression, currentInput, '√'];
-        setExpression(newExpression);
-        setDisplay(newExpression.join(' '));
-        setCurrentInput('0');
-        setPendingOperation(label);
-      } else {
-        setExpression([...expression, '√']);
-        setDisplay([...expression, '√'].join(' '));
-        setCurrentInput('0');
-        setPendingOperation(label);
+      const newExpression = expression.length === 0 || ['+', '-', 'x', '÷', '^', '√'].includes(expression[expression.length - 1])
+        ? [...expression, '√']
+        : [...expression, currentInput, '√'];
+      setExpression(newExpression);
+      setDisplay(newExpression.join(' '));
+      setCurrentInput('0');
+      setPendingOperation(label);
+      if (currentInput !== '0') {
+        setLastOperand(currentInput);
       }
     } else if (label === '±') {
       if (currentInput !== '' && !isNaN(parseFloat(currentInput))) {
@@ -155,10 +159,11 @@ const Calculator = () => {
         }
       }
     } else if (label === '=') {
-      if (currentInput !== '' && !isNaN(parseFloat(currentInput))) {
+      if (currentInput !== '' && !isNaN(parseFloat(currentInput)) && pendingOperation) {
         try {
           const expressionToEvaluate = [...expression, currentInput];
           setLastExpression(expressionToEvaluate);
+          setLastOperand(currentInput);
           const finalResult = await evaluateExpression(expressionToEvaluate);
           setHistory([...history, { expression: expressionToEvaluate.join(' '), result: finalResult }]);
           setDisplay(finalResult.toString());
@@ -175,10 +180,24 @@ const Calculator = () => {
           setResult(null);
           console.error('Error en cálculo:', error);
         }
-      } else if (display === '0' && lastExpression.length > 0) {
-        setDisplay(lastExpression.join(' '));
-        setExpression([...lastExpression]);
-        setCurrentInput(lastExpression[lastExpression.length - 1] || '0');
+      } else if (result !== null && lastOperator && lastOperand) {
+        try {
+          const newExpression = [result.toString(), lastOperator, lastOperand];
+          const finalResult = await evaluateExpression(newExpression);
+          setHistory([...history, { expression: newExpression.join(' '), result: finalResult }]);
+          setDisplay(finalResult.toString());
+          setExpression([finalResult.toString()]);
+          setAns(finalResult);
+          setResult(finalResult);
+          setCurrentInput(finalResult.toString());
+        } catch (error) {
+          setDisplay('Error');
+          setExpression([]);
+          setCurrentInput('0');
+          setPendingOperation(null);
+          setResult(null);
+          console.error('Error en cálculo repetido:', error);
+        }
       }
     }
   };
