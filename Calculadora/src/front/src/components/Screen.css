@@ -1,5 +1,5 @@
 .screen {
-  background-color: #2e3d34; 
+  background-color: #2e3d34;
   border: 2px solid #1a1a1a;
   border-radius: 5px;
   padding: 10px;
@@ -8,10 +8,20 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  overflow-x: auto; 
+  white-space: nowrap; 
 }
 
 .display {
   color: #ffffff;
   font-family: 'Digital-7', monospace;
   font-size: 2rem;
+}
+
+.screen .display {
+  max-width: 100%;
+}
+
+.screen .display[style*="length"] {
+  font-size: 1.5rem; 
 }

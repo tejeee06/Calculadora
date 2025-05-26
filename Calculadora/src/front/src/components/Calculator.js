@@ -17,32 +17,36 @@ const Calculator = () => {
   const [showHistory, setShowHistory] = useState(false);
 
   const evaluateExpression = async (currentExpression) => {
-    let currentResult = result || 0;
+    let currentResult = null;
     let currentOperand = '';
     let currentOp = null;
 
-    const tokens = currentExpression.join('').split(' ').filter(t => t !== '');
+    const tokens = currentExpression.filter(t => t !== '');
 
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
 
       if (/^[0-9.]+$/.test(token) && !isNaN(parseFloat(token))) {
         currentOperand = token;
-      } else if (['+', '-', 'x', '÷', '^'].includes(token)) {
-        if (currentOperand !== '' && !isNaN(parseFloat(currentOperand))) {
-          if (currentResult === null) {
-            currentResult = parseFloat(currentOperand);
-          } else {
-            const response = await axios.post('http://localhost:8080/api/calculate', {
-              operand1: currentResult,
-              operand2: parseFloat(currentOperand),
-              operation: currentOp || '+',
-            });
-            currentResult = response.data;
-          }
+        if (currentOp && currentResult !== null) {
+          const response = await axios.post('http://localhost:8080/api/calculate', {
+            operand1: currentResult,
+            operand2: parseFloat(currentOperand),
+            operation: currentOp,
+          });
+          currentResult = response.data;
           currentOperand = '';
-          currentOp = token;
+          currentOp = null;
+        } else if (currentResult === null) {
+          currentResult = parseFloat(currentOperand);
+          currentOperand = '';
         }
+      } else if (['+', '-', 'x', '÷', '^'].includes(token)) {
+        if (currentOperand !== '') {
+          currentResult = parseFloat(currentOperand);
+          currentOperand = '';
+        }
+        currentOp = token;
       } else if (token === '√') {
         if (i + 1 < tokens.length && /^[0-9.]+$/.test(tokens[i + 1]) && !isNaN(parseFloat(tokens[i + 1]))) {
           const operand = parseFloat(tokens[i + 1]);
@@ -52,19 +56,23 @@ const Calculator = () => {
             operation: '√',
           });
           currentResult = response.data;
-          i++; // Saltar el siguiente operando
+          i++;
           currentOperand = '';
         }
       }
     }
 
-    if (currentOperand !== '' && currentOp && !isNaN(parseFloat(currentOperand))) {
-      const response = await axios.post('http://localhost:8080/api/calculate', {
-        operand1: currentResult,
-        operand2: parseFloat(currentOperand),
-        operation: currentOp,
-      });
-      currentResult = response.data;
+    if (currentOperand !== '' && !isNaN(parseFloat(currentOperand))) {
+      if (currentResult === null) {
+        currentResult = parseFloat(currentOperand);
+      } else if (currentOp) {
+        const response = await axios.post('http://localhost:8080/api/calculate', {
+          operand1: currentResult,
+          operand2: parseFloat(currentOperand),
+          operation: currentOp,
+        });
+        currentResult = response.data;
+      }
     }
 
     return currentResult;
@@ -74,14 +82,12 @@ const Calculator = () => {
     if (/[0-9]/.test(label)) {
       const newInput = currentInput === '0' ? label : currentInput + label;
       setCurrentInput(newInput);
-      setExpression([...expression, label]);
-      setDisplay([...expression, label].join(' '));
+      setDisplay([...expression, newInput].join(' '));
     } else if (label === '.') {
       if (!currentInput.includes('.') && currentInput !== '') {
         const newInput = currentInput + '.';
         setCurrentInput(newInput);
-        setExpression([...expression, '.']);
-        setDisplay([...expression, '.'].join(' '));
+        setDisplay([...expression, newInput].join(' '));
       }
     } else if (label === 'C') {
       setDisplay('0');
@@ -98,9 +104,7 @@ const Calculator = () => {
       } else {
         const newInput = currentInput.slice(0, -1);
         setCurrentInput(newInput);
-        const newExpression = expression.slice(0, -1);
-        setExpression(newExpression);
-        setDisplay(newExpression.join(' ') || '0');
+        setDisplay([...expression, newInput].join(' '));
       }
     } else if (label === 'ANS') {
       if (ans !== null) {
@@ -108,14 +112,24 @@ const Calculator = () => {
         setExpression([...expression, ans.toString()]);
         setDisplay([...expression, ans.toString()].join(' '));
       }
-    } else if (['+', '-', 'x', '÷', '^', '√'].includes(label)) {
-      if (label === '√') {
-        setExpression([...expression, label, ' ']);
-        setDisplay([...expression, label, ' '].join(' '));
+    } else if (['+', '-', 'x', '÷', '^'].includes(label)) {
+      if (currentInput !== '' && !isNaN(parseFloat(currentInput))) {
+        const newExpression = [...expression, currentInput, label];
+        setExpression(newExpression);
+        setDisplay(newExpression.join(' '));
         setCurrentInput('0');
+        setPendingOperation(label);
+      }
+    } else if (label === '√') {
+      if (currentInput !== '' && !isNaN(parseFloat(currentInput))) {
+        const newExpression = [...expression, currentInput, '√'];
+        setExpression(newExpression);
+        setDisplay(newExpression.join(' '));
+        setCurrentInput('0');
+        setPendingOperation(label);
       } else {
-        setExpression([...expression, ' ', label, ' ']);
-        setDisplay([...expression, ' ', label, ' '].join(' '));
+        setExpression([...expression, '√']);
+        setDisplay([...expression, '√'].join(' '));
         setCurrentInput('0');
         setPendingOperation(label);
       }
@@ -128,24 +142,22 @@ const Calculator = () => {
             operation: '±',
           });
           const newValue = response.data.toString();
-          // Reemplazar solo el número actual en la expresión
-          const newExpression = [...expression.slice(0, -currentInput.length), ...newValue.split('')];
           setCurrentInput(newValue);
-          setExpression(newExpression);
-          setDisplay(newExpression.join(' '));
+          setDisplay([...expression, newValue].join(' '));
+          if (expression.length > 0 && !['+', '-', 'x', '÷', '^', '√'].includes(expression[expression.length - 1])) {
+            setExpression([...expression.slice(0, -1), newValue]);
+          } else {
+            setExpression([...expression, newValue]);
+          }
         } catch (error) {
           setDisplay('Error');
-          console.error(error);
+          console.error('Error en ±:', error);
         }
       }
     } else if (label === '=') {
-      if (display === '0' && lastExpression.length > 0) {
-        setDisplay(lastExpression.join(' '));
-        setExpression([...lastExpression]);
-        setCurrentInput(lastExpression[lastExpression.length - 1]);
-      } else {
+      if (currentInput !== '' && !isNaN(parseFloat(currentInput))) {
         try {
-          const expressionToEvaluate = [...expression, ' ', currentInput];
+          const expressionToEvaluate = [...expression, currentInput];
           setLastExpression(expressionToEvaluate);
           const finalResult = await evaluateExpression(expressionToEvaluate);
           setHistory([...history, { expression: expressionToEvaluate.join(' '), result: finalResult }]);
@@ -161,8 +173,12 @@ const Calculator = () => {
           setCurrentInput('0');
           setPendingOperation(null);
           setResult(null);
-          console.error(error);
+          console.error('Error en cálculo:', error);
         }
+      } else if (display === '0' && lastExpression.length > 0) {
+        setDisplay(lastExpression.join(' '));
+        setExpression([...lastExpression]);
+        setCurrentInput(lastExpression[lastExpression.length - 1] || '0');
       }
     }
   };
