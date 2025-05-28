@@ -6,6 +6,7 @@ import History from './History';
 import './Calculator.css';
 
 const Calculator = () => {
+  // Estats
   const [display, setDisplay] = useState('0');
   const [expression, setExpression] = useState([]);
   const [ans, setAns] = useState(null);
@@ -18,17 +19,18 @@ const Calculator = () => {
   const [lastOperator, setLastOperator] = useState(null);
   const [lastOperand, setLastOperand] = useState(null);
 
+  // Evalua la expressio i envia solicitud POST al Backend
   const evaluateExpression = async (currentExpression) => {
     let currentResult = null;
     let currentOperand = '';
     let currentOp = null;
 
-    const tokens = currentExpression.filter(t => t !== '' && t !== '0'); // Eliminar 0s iniciales
+    const tokens = currentExpression.filter(t => t !== '' && t !== '0'); // Eliminar 0s inicials
 
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
 
-      if (/^-?[0-9.]+$/.test(token) && !isNaN(parseFloat(token))) { // Manejar negativos
+      if (/^-?[0-9.]+$/.test(token) && !isNaN(parseFloat(token))) { // Manejar Negatius i 0 Inicials
         currentOperand = token;
         if (currentOp && currentResult !== null) {
           const response = await axios.post('http://localhost:8080/api/calculate', {
@@ -80,6 +82,7 @@ const Calculator = () => {
     return currentResult;
   };
 
+  // Maneja els clicls dels botons segons lo que sigui
   const handleButtonClick = async (label) => {
     if (/[0-9]/.test(label)) {
       const newInput = currentInput === '0' || currentInput === '-0' ? label : currentInput + label;
@@ -119,7 +122,6 @@ const Calculator = () => {
     } else if (['+', '-', 'x', '÷', '^'].includes(label)) {
       if (currentInput !== '' && !isNaN(parseFloat(currentInput))) {
         let newExpression = expression;
-        // Limpiar 0s iniciales y evitar duplicar el número
         if (expression.length === 0 || ['+', '-', 'x', '÷', '^', '√'].includes(expression[expression.length - 1])) {
           newExpression = [...expression.filter(t => t !== '0'), currentInput, label];
         } else {
@@ -153,7 +155,6 @@ const Calculator = () => {
           });
           const newValue = response.data.toString();
           setCurrentInput(newValue);
-          // Reemplazar el último número en expression o añadir si está vacía
           let newExpression = expression;
           if (expression.length > 0 && !['+', '-', 'x', '÷', '^', '√'].includes(expression[expression.length - 1])) {
             newExpression = [...expression.slice(0, -1).filter(t => t !== '0'), newValue];
@@ -211,6 +212,7 @@ const Calculator = () => {
     }
   };
 
+  // RENDER
   return (
     <div className="calculator">
       <Screen display={display} />

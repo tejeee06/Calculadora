@@ -3,6 +3,7 @@ package com.calculator.service;
 import com.calculator.model.Calculation;
 import org.springframework.stereotype.Service;
 
+// Realitza les operacions corresponents segons els simbols
 @Service
 public class CalculatorService {
     public double calculate(Calculation calculation) {
